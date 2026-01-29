@@ -1,17 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "Dashboard--backend--main/symposium-backend/server.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "Dashboard--backend--main/symposium-backend/server.js"
-    }
-  ],
+  "buildCommand": "cd Dashboard--backend--main/symposium-backend && npm install",
+  "installCommand": "npm install",
   "env": {
     "SHEET_ID": "@sheet_id",
     "GS_CLIENT_EMAIL": "@gs_client_email",
