@@ -1,0 +1,28 @@
+{
+  "$schema": "https://render.com/docs/render-manifest-schema.json",
+  "services": [
+    {
+      "type": "web",
+      "name": "symposium-dashboard",
+      "env": "node",
+      "plan": "free",
+      "buildCommand": "cd Dashboard--backend--main/symposium-backend && npm install",
+      "startCommand": "cd Dashboard--backend--main/symposium-backend && npm start",
+      "envVars": [
+        {
+          "key": "SHEET_ID",
+          "value": "1iWSJua2nfdsw5jC9DKK-CA10zjYT6IpRhjLBCWJV8Mk"
+        },
+        {
+          "key": "GS_CLIENT_EMAIL",
+          "value": "dashboard@safebuddy-gaurdian-10c86.iam.gserviceaccount.com",
+          "sync": false
+        },
+        {
+          "key": "GS_PRIVATE_KEY",
+          "sync": false
+        }
+      ]
+    }
+  ]
+}
