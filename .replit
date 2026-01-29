@@ -1,0 +1,2 @@
+.replit
+run = "cd Dashboard--backend--main/symposium-backend && npm start"
