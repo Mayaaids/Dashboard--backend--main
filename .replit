@@ -1,2 +1,1 @@
-.replit
-run = "cd Dashboard--backend--main/symposium-backend && npm start"
+run = "npm --prefix Dashboard--backend--main/symposium-backend start"
