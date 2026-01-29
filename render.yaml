@@ -6,8 +6,9 @@
       "name": "symposium-dashboard",
       "env": "node",
       "plan": "free",
-      "buildCommand": "cd Dashboard--backend--main/symposium-backend && npm install",
-      "startCommand": "cd Dashboard--backend--main/symposium-backend && npm start",
+      "rootDir": "Dashboard--backend--main/symposium-backend",
+      "buildCommand": "npm install",
+      "startCommand": "npm start",
       "envVars": [
         {
           "key": "SHEET_ID",
