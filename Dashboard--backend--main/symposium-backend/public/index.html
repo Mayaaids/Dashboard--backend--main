@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Live Registration Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="event-title">LIVE REGISTRATION CONTROL</div>
+                <div class="timestamp" id="timestamp">--:--:--</div>
+                <div class="header-right">
+                    <span class="header-brand" aria-label="TALOS">TALOS</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Total Counter Section (F1 Lap Counter Style) -->
+        <section class="total-counter-section">
+            <div class="counter-label">TOTAL PARTICIPANTS</div>
+            <div class="counter-value" id="totalCounter">0</div>
+            <div class="counter-subtitle">LIVE</div>
+            <div class="counter-pulse"></div>
+        </section>
+
+        <!-- Event Leaderboard Section (F1 Standings Style) -->
+        <section class="events-section">
+            <div class="leaderboard-header">
+                <span class="leaderboard-title">EVENT STANDINGS</span>
+                <span class="leaderboard-subtitle">Click event name for details</span>
+            </div>
+            <div class="leaderboard" id="leaderboard">
+                <!-- Event leaderboard will be dynamically generated here -->
+            </div>
+        </section>
+
+        <!-- Advanced Panels Section -->
+        <section class="advanced-panels">
+            <!-- Recent Registrations Ticker -->
+            <div class="panel recent-ticker-panel">
+                <div class="panel-header">
+                    <span class="panel-title">RECENT REGISTRATIONS</span>
+                    <span class="panel-badge">LIVE FEED</span>
+                </div>
+                <div class="ticker-container">
+                    <div class="ticker-content" id="recentTicker">
+                        <!-- Recent registrations will scroll here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Distribution Chart -->
+            <div class="panel chart-panel">
+                <div class="panel-header">
+                    <span class="panel-title">EVENT DISTRIBUTION</span>
+                    <span class="panel-badge">ANALYTICS</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Event Details Modal (shows full Excel-style data for a clicked event) -->
+        <div class="event-details-modal" id="eventDetailsModal">
+            <div class="event-details-backdrop" id="eventDetailsBackdrop"></div>
+            <div class="event-details-panel">
+                <div class="event-details-header">
+                    <div>
+                        <div class="event-details-title" id="eventDetailsTitle">EVENT DETAILS</div>
+                        <div class="event-details-subtitle" id="eventDetailsSubtitle">-- participants</div>
+                    </div>
+                    <div class="event-details-actions">
+                        <button class="event-details-toggle" id="eventDetailsToggle">SHOW ALL</button>
+                        <button class="event-details-close" id="eventDetailsClose">×</button>
+                    </div>
+                </div>
+                <div class="event-details-body">
+                    <table class="event-details-table">
+                        <thead>
+                            <tr id="eventDetailsTableHeadRow">
+                                <th>#</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventDetailsTableBody">
+                            <!-- Filled dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Status Indicator -->
+        <div class="connection-status" id="connectionStatus">
+            <span class="status-dot"></span>
+            <span class="status-text">CONNECTING...</span>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+
+</html>
+
+<!-- Registration Modal -->
+<div class="registration-modal" id="registrationModal">
+    <div class="registration-backdrop" id="registrationBackdrop"></div>
+    <div class="registration-panel">
+        <div class="registration-header">
+            <h3>Quick Registration</h3>
+            <button id="registrationClose" class="registration-close">×</button>
+        </div>
+        <div class="registration-body">
+            <label>Name <input type="text" id="regName" /></label>
+            <label>College <input type="text" id="regCollege" /></label>
+            <label>Event
+                <select id="regEvent">
+                    <option value="">-- Select Event --</option>
+                </select>
+            </label>
+            <label>Payment <input type="text" id="regPayment" placeholder="txn id / amount" /></label>
+            <div class="registration-actions">
+                <button id="registrationSubmit">Submit</button>
+                <button id="registrationCancel">Cancel</button>
+            </div>
+            <div id="registrationMsg" class="registration-msg"></div>
+        </div>
+    </div>
+</div>

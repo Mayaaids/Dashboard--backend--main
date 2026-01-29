@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register – TALOS Live</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="event-title">TALOS REGISTRATION</div>
+                <a href="/" class="nav-link">← Dashboard</a>
+            </div>
+        </header>
+
+        <section class="register-section">
+            <div class="register-panel">
+                <h2 class="register-title">Add registration</h2>
+                <p class="register-subtitle">Saves to Google Sheet + backend. Matches Sheet1 columns.</p>
+                <form id="registerForm" class="register-form">
+                    <label>Name *</label>
+                    <input type="text" name="name" required placeholder="Full name">
+                    <label>Email *</label>
+                    <input type="email" name="email" required placeholder="email@example.com">
+                    <label>Team</label>
+                    <input type="text" name="team" placeholder="Team name">
+                    <label>Event *</label>
+                    <input type="text" name="event" required placeholder="e.g. Event - CrimeTrace">
+                    <label>College</label>
+                    <input type="text" name="college" placeholder="College name">
+                    <button type="submit" class="register-btn">Submit</button>
+                </form>
+                <div id="registerMessage" class="register-message"></div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const form = document.getElementById('registerForm');
+        const msg = document.getElementById('registerMessage');
+        const base = typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost:5000';
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.textContent = '';
+            msg.className = 'register-message';
+            const btn = form.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Sending…';
+
+            const data = {
+                name: form.name.value.trim() || 'Unknown',
+                email: form.email.value.trim() || 'unknown@example.com',
+                team: form.team.value.trim() || 'Unknown',
+                event: form.event.value.trim() || 'Unknown',
+                college: form.college.value.trim() || 'Unknown'
+            };
+
+            try {
+                const r = await fetch(`${base}/api/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const j = await r.json();
+                if (r.ok && j.success) {
+                    msg.textContent = 'Registration saved. It will appear on the dashboard shortly.';
+                    msg.className = 'register-message success';
+                    form.reset();
+                } else {
+                    msg.textContent = j.error || j.message || 'Registration failed';
+                    msg.className = 'register-message error';
+                }
+            } catch (err) {
+                msg.textContent = 'Network error. Is the backend running at ' + base + '?';
+                msg.className = 'register-message error';
+            }
+            btn.disabled = false;
+            btn.textContent = 'Submit';
+        });
+    </script>
+</body>
+</html>

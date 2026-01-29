@@ -1,0 +1,11 @@
+Put your TALOS image files in this folder:
+
+1) Watermark (center background):
+   - filename: talos-watermark.png
+
+2) Header logo (top right):
+   - filename: talos-logo.png
+
+Tip:
+- You can use the SAME image for both. Just duplicate it and rename accordingly.
+
