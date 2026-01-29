@@ -62,9 +62,10 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(5000, () => {
-    console.log("🚀 Server running on port 5000");
-    console.log("📊 Dashboard:  http://localhost:5000");
-    console.log("📝 Register:   http://localhost:5000/register");
-    console.log("📈 API:        http://localhost:5000/api/register (GET /excel, /stats | POST /)");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Dashboard:  http://localhost:${PORT}`);
+    console.log(`📝 Register:   http://localhost:${PORT}/register`);
+    console.log(`📈 API:        http://localhost:${PORT}/api/register (GET /excel, /stats | POST /)`);
 });
