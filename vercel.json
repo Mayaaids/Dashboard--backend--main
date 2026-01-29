@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "Dashboard--backend--main/symposium-backend/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "Dashboard--backend--main/symposium-backend/server.js"
+    }
+  ],
+  "env": {
+    "SHEET_ID": "@sheet_id",
+    "GS_CLIENT_EMAIL": "@gs_client_email",
+    "GS_PRIVATE_KEY": "@gs_private_key"
+  }
+}
