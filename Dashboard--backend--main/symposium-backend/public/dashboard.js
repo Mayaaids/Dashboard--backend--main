@@ -232,10 +232,21 @@ class F1Dashboard {
                 ? (event.participants[0].event || event.participants[0].sheet || '')
                 : '';
 
+            // Normalize event name by removing common prefixes like "Event - ", "Workshop - "
+            const rawName = (event.name && String(event.name).trim().length > 0)
+                ? event.name
+                : (event.participants && event.participants[0] && event.participants[0].event) ? event.participants[0].event : 'Unknown Event';
+
+            const normalized = String(rawName)
+                .replace(/^(Event|Workshop|Category)\s*[-–:\s]+/i, '')
+                .replace(/^"|"$/g, '')
+                .trim();
+
+            const combinedTitle = `${normalized} ${event.count}`;
+
             card.innerHTML = `
                 <div class="team-card-top">
-                    <div class="team-card-title">${displayTitle}</div>
-                    <div class="team-card-count">${event.count}</div>
+                    <div class="team-card-title">${combinedTitle}</div>
                 </div>
                 <div class="team-card-meta">${metaText}</div>
                 <div class="team-card-bar"><div class="team-card-bar-fill" style="width:${Math.max(2, percentage)}%"></div></div>
