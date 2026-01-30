@@ -157,13 +157,16 @@ export async function getAllExcelData() {
                 const idxOf = (re) => header.findIndex(h => re.test(h));
 
                 const timestampIdx = idxOf(/timestamp|submitted/);
-                const nameIdx = idxOf(/\bname\b|^your\s+name/);
+                const nameIdx = idxOf(/\bname\b|^your\s+name|^name|full\s*name/);
                 const emailIdx = idxOf(/email|mail/);
-                const teamIdx = idxOf(/team/);
+                const teamIdx = idxOf(/team|group/);
                 const collegeIdx = idxOf(/college|institution|school|university/);
                 const eventIdx = idxOf(/event/);
-                const teamLeaderIdx = idxOf(/team\s*leader|leader|team\s*captain|team\s*head|team\s*co-?ordinator|contact|contact\s*person/);
-                const teamLeaderEmailIdx = idxOf(/leader.*email|team.*email|captain.*email|contact.*email|leader\s+email|team\s+email/);
+                // Flexible team leader detection - matches various column names
+                const teamLeaderIdx = idxOf(/leader|captain|head|coordinator|contact/) >= 0 
+                    ? idxOf(/leader|captain|head|coordinator|contact/)
+                    : idxOf(/team/);  // fallback to team column if no leader found
+                const teamLeaderEmailIdx = idxOf(/leader.*email|email.*leader|captain.*email|contact.*email|team.*email/);
 
                 // Process data from this sheet (skip header).
                 // Event display name comes from the sheet/tab name:
