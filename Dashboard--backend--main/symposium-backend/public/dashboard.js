@@ -411,28 +411,29 @@ class F1Dashboard {
         const collegeIdx = CONFIG?.COLUMNS?.COLLEGE ?? 3;
         const timestampIdx = CONFIG?.COLUMNS?.TIMESTAMP ?? 5;
 
-        // Prefer explicit team-leader columns when present in headers
-        const leaderNameIdx = headers.findIndex(h => /team\s*leader|leader\s*name|captain|contact\s*name/i.test(String(h || '')));
-        const leaderEmailIdx = headers.findIndex(h => /leader.*email|team.*email|captain.*email|contact.*email|email.*leader/i.test(String(h || '')));
-
-        // Show Team Groups with Team Leader Name under each team
-        headRow.innerHTML = '<th>#</th><th>Team Name</th><th>Team Leader</th>';
+        // Simple display: Team Leader, Email, College
+        headRow.innerHTML = '<th>#</th><th>Team Leader</th><th>Email</th><th>College</th>';
 
         tbody.innerHTML = '';
         let rowNum = 1;
-        Object.values(teamGroups).forEach(group => {
+        eventData.participants.forEach(p => {
             const tr = document.createElement('tr');
+            
             const tdNum = document.createElement('td');
             tdNum.textContent = rowNum++;
             tr.appendChild(tdNum);
 
-            const tdTeam = document.createElement('td');
-            tdTeam.innerHTML = `<strong>${group.team}</strong>`;
-            tr.appendChild(tdTeam);
-
             const tdLeader = document.createElement('td');
-            tdLeader.innerHTML = `<div>${group.leader}</div><div style="font-size:0.85em; color:#666;">${group.email || 'N/A'}</div>`;
+            tdLeader.textContent = p.teamLeader || 'Not Assigned';
             tr.appendChild(tdLeader);
+
+            const tdEmail = document.createElement('td');
+            tdEmail.textContent = p.teamLeaderEmail || p.email || '-';
+            tr.appendChild(tdEmail);
+
+            const tdCollege = document.createElement('td');
+            tdCollege.textContent = p.college || '-';
+            tr.appendChild(tdCollege);
 
             tbody.appendChild(tr);
         });
