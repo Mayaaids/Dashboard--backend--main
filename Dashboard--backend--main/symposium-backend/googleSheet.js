@@ -162,9 +162,9 @@ export async function getAllExcelData() {
                 const teamIdx = idxOf(/team|group/);
                 const collegeIdx = idxOf(/college|institution|school|university/);
                 const eventIdx = idxOf(/event/);
-                // Team leader detection - look for columns with leader/name keywords
-                let teamLeaderIdx = idxOf(/leader|name|captain|head/);
-                // But avoid email columns
+                // Team leader detection - prioritize actual leader columns, not generic name
+                let teamLeaderIdx = idxOf(/leader|captain|head/);
+                // Skip if it matched an email column
                 if (teamLeaderIdx >= 0 && header[teamLeaderIdx].includes('email')) {
                     teamLeaderIdx = -1;
                 }
