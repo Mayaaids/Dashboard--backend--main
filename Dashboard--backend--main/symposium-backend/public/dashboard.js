@@ -272,8 +272,13 @@ class F1Dashboard {
             item.className = 'ticker-item';
 
             const raw = Array.isArray(participant.raw) ? participant.raw : [];
+            // Prefer leader name in ticker only if a leader-name column exists
+            const headers = (this.headers && this.headers.length > 0) ? this.headers : [];
+            const leaderNameIdx = headers.findIndex(h => /team\s*leader|leader\s*name|captain|contact\s*name/i.test(String(h || '')));
+            const leaderName = (leaderNameIdx >= 0 && raw[leaderNameIdx]) ? String(raw[leaderNameIdx]) : '';
             const eventName = participant.event || raw[2] || raw[0] || '-';
 
+            // For ticker we show event name only; but ensure leader names won't be needed here.
             item.innerHTML = `
                 <span class="ticker-event">${eventName}</span>
             `;
@@ -446,19 +451,26 @@ class F1Dashboard {
                 // Render compact columns: Name, Team, Email, College
                 // Name
                 const nameTd = document.createElement('td');
-                // Team leader name preference: participant object -> explicit leader column -> raw name column
-                const displayName = (p.name && String(p.name).trim().length > 0)
-                    ? p.name
-                    : (leaderNameIdx >= 0 ? (raw[leaderNameIdx] || '-') : (raw[nameIdx] || '-'));
+                // Team leader name preference: check common leader properties first,
+                // then explicit leader column, then participant `name`, then raw name column
+                const leaderProps = [p.teamLeader, p.team_leader, p.leaderName, p.leader_name, p.captain, p.captainName, p.captain_name, p.contact_name];
+                const leaderFromProps = leaderProps.find(v => v && String(v).trim().length > 0);
+                // Prefer explicit leader column first for every team tab
+                const displayName = (leaderNameIdx >= 0 && raw[leaderNameIdx] && String(raw[leaderNameIdx]).trim().length > 0)
+                    ? String(raw[leaderNameIdx])
+                    : (leaderFromProps || (p.name && String(p.name).trim().length > 0 ? p.name : (raw[nameIdx] || '-')));
                 nameTd.textContent = displayName;
                 tr.appendChild(nameTd);
 
                 // Email
                 const emailTd = document.createElement('td');
-                // Team leader email preference: participant.email -> explicit leader email column -> raw email column
-                const displayEmail = (p.email && String(p.email).trim().length > 0)
-                    ? p.email
-                    : (leaderEmailIdx >= 0 ? (raw[leaderEmailIdx] || '-') : (raw[emailIdx] || '-'));
+                // Team leader email preference: check common leader email properties, then explicit leader email column, then participant.email, then raw email column
+                const leaderEmailProps = [p.teamLeaderEmail, p.team_leader_email, p.leaderEmail, p.leader_email, p.captainEmail, p.captain_email, p.contact_email];
+                const leaderEmailFromProps = leaderEmailProps.find(v => v && String(v).trim().length > 0);
+                const displayEmail = leaderEmailFromProps
+                    || (leaderEmailIdx >= 0 ? (raw[leaderEmailIdx] || '') : '')
+                    || (p.email && String(p.email).trim().length > 0 ? p.email : '')
+                    || (raw[emailIdx] || '-');
                 emailTd.textContent = displayEmail;
                 tr.appendChild(emailTd);
 
