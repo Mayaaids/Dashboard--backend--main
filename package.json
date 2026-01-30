@@ -1,0 +1,10 @@
+{
+  "name": "dashboard-project-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo \"No frontend build step required.\"",
+    "postinstall": "cd Dashboard--backend--main/symposium-backend && npm install",
+    "start": "node Dashboard--backend--main/symposium-backend/server.js"
+  }
+}
