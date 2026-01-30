@@ -413,6 +413,31 @@ class F1Dashboard {
             if (found >= 0) paymentIdx = found;
         }
 
+        // If there's no leader-name header, infer the most likely name column
+        let inferredNameIdx = -1;
+        if (leaderNameIdx < 0 && eventData.participants && eventData.participants.length > 0) {
+            const nameRegex = /^[A-Za-z][A-Za-z\s.'-]{1,}$/;
+            const emailRegex = /@/;
+            const maxCols = Math.max(...eventData.participants.map(p => (Array.isArray(p.raw) ? p.raw.length : 0)) , 0);
+            const counts = new Array(maxCols).fill(0);
+
+            eventData.participants.forEach(p => {
+                const raw = Array.isArray(p.raw) ? p.raw : [];
+                for (let c = 0; c < maxCols; c++) {
+                    const v = String(raw[c] || '').trim();
+                    if (!v) continue;
+                    if (emailRegex.test(v)) continue; // skip emails
+                    if (nameRegex.test(v) && v.split(' ').length >= 2) counts[c]++;
+                }
+            });
+
+            let bestIdx = -1, bestCount = 0;
+            counts.forEach((cnt, idx) => {
+                if (cnt > bestCount) { bestCount = cnt; bestIdx = idx; }
+            });
+            if (bestCount > 0) inferredNameIdx = bestIdx;
+        }
+
         // Compact view: show Name, Email, College (Team column removed)
         const compactColumns = [
             { label: 'Name', idx: nameIdx },
@@ -455,10 +480,10 @@ class F1Dashboard {
                 // then explicit leader column, then participant `name`, then raw name column
                 const leaderProps = [p.teamLeader, p.team_leader, p.leaderName, p.leader_name, p.captain, p.captainName, p.captain_name, p.contact_name];
                 const leaderFromProps = leaderProps.find(v => v && String(v).trim().length > 0);
-                // Prefer explicit leader column first for every team tab
-                const displayName = (leaderNameIdx >= 0 && raw[leaderNameIdx] && String(raw[leaderNameIdx]).trim().length > 0)
-                    ? String(raw[leaderNameIdx])
-                    : (leaderFromProps || (p.name && String(p.name).trim().length > 0 ? p.name : (raw[nameIdx] || '-')));
+                // Prefer explicit leader column first for every team tab, then inferredNameIdx, then leader props, then p.name
+                const fromLeaderCol = (leaderNameIdx >= 0 && raw[leaderNameIdx] && String(raw[leaderNameIdx]).trim().length > 0) ? String(raw[leaderNameIdx]) : '';
+                const fromInferred = (inferredNameIdx >= 0 && raw[inferredNameIdx] && String(raw[inferredNameIdx]).trim().length > 0) ? String(raw[inferredNameIdx]) : '';
+                const displayName = fromLeaderCol || fromInferred || leaderFromProps || (p.name && String(p.name).trim().length > 0 ? p.name : (raw[nameIdx] || '-'));
                 nameTd.textContent = displayName;
                 tr.appendChild(nameTd);
 
