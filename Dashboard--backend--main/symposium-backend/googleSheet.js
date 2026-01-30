@@ -162,8 +162,8 @@ export async function getAllExcelData() {
                 const teamIdx = idxOf(/team/);
                 const collegeIdx = idxOf(/college|institution|school|university/);
                 const eventIdx = idxOf(/event/);
-                const teamLeaderIdx = idxOf(/team\s*leader|leader\s*name|captain/);
-                const teamLeaderEmailIdx = idxOf(/team\s*leader.*email|leader.*email|captain.*email/);
+                const teamLeaderIdx = idxOf(/team\s*leader|leader|team\s*captain|team\s*head|team\s*co-?ordinator|contact|contact\s*person/);
+                const teamLeaderEmailIdx = idxOf(/leader.*email|team.*email|captain.*email|contact.*email|leader\s+email|team\s+email/);
 
                 // Process data from this sheet (skip header).
                 // Event display name comes from the sheet/tab name:
