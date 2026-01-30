@@ -162,6 +162,8 @@ export async function getAllExcelData() {
                 const teamIdx = idxOf(/team/);
                 const collegeIdx = idxOf(/college|institution|school|university/);
                 const eventIdx = idxOf(/event/);
+                const teamLeaderIdx = idxOf(/team\s*leader|leader\s*name|captain/);
+                const teamLeaderEmailIdx = idxOf(/team\s*leader.*email|leader.*email|captain.*email/);
 
                 // Process data from this sheet (skip header).
                 // Event display name comes from the sheet/tab name:
@@ -181,6 +183,8 @@ export async function getAllExcelData() {
                     const team = pick(teamIdx);
                     const college = pick(collegeIdx);
                     const eventMeta = pick(eventIdx);
+                    const teamLeader = pick(teamLeaderIdx);
+                    const teamLeaderEmail = pick(teamLeaderEmailIdx);
 
                     // Frontend expects a fixed 6-column raw array: Name, Email, Team, Event, College, Timestamp
                     const raw = [
@@ -200,6 +204,8 @@ export async function getAllExcelData() {
                         event: raw[3], // IMPORTANT: event name = cleaned tab name (e.g. "PIXORA")
                         college: raw[4],
                         timestamp: raw[5],
+                        teamLeader: teamLeader || "Not Assigned",
+                        teamLeaderEmail: teamLeaderEmail || "",
                         sheet: sheetName,
                         eventType,
                         eventMeta,

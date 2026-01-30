@@ -386,11 +386,22 @@ class F1Dashboard {
         const eventData = this.eventStats[eventName];
         if (!eventData) return;
 
+        // Group participants by team to show team leader under team name
+        const teamGroups = {};
+        eventData.participants.forEach(p => {
+            const teamName = p.team || p.event || 'Unassigned';
+            if (!teamGroups[teamName]) {
+                teamGroups[teamName] = { team: teamName, leader: p.teamLeader || 'Not Assigned', email: p.teamLeaderEmail || '', members: [] };
+            }
+            teamGroups[teamName].members.push(p);
+        });
+
         if (titleEl) {
             titleEl.textContent = eventName.toUpperCase();
         }
         if (subtitleEl) {
-            subtitleEl.textContent = `${eventData.count} participant${eventData.count !== 1 ? 's' : ''}`;
+            const teamCount = Object.keys(teamGroups).length;
+            subtitleEl.textContent = `${teamCount} team${teamCount !== 1 ? 's' : ''} - ${eventData.count} participant${eventData.count !== 1 ? 's' : ''}`;
         }
 
         const headers = (this.headers && this.headers.length > 0) ? this.headers : [];
@@ -404,107 +415,25 @@ class F1Dashboard {
         const leaderNameIdx = headers.findIndex(h => /team\s*leader|leader\s*name|captain|contact\s*name/i.test(String(h || '')));
         const leaderEmailIdx = headers.findIndex(h => /leader.*email|team.*email|captain.*email|contact.*email|email.*leader/i.test(String(h || '')));
 
-        let paymentIdx = null;
-        if (typeof CONFIG?.PAYMENT_INDEX === 'number') {
-            paymentIdx = CONFIG.PAYMENT_INDEX;
-        } else if (headers.length > 0 && CONFIG?.PAYMENT_HEADER_MATCH) {
-            const re = CONFIG.PAYMENT_HEADER_MATCH;
-            const found = headers.findIndex(h => re.test(String(h || '')));
-            if (found >= 0) paymentIdx = found;
-        }
-
-        // If there's no leader-name header, infer the most likely name column
-        let inferredNameIdx = -1;
-        if (leaderNameIdx < 0 && eventData.participants && eventData.participants.length > 0) {
-            const nameRegex = /^[A-Za-z][A-Za-z\s.'-]{1,}$/;
-            const emailRegex = /@/;
-            const maxCols = Math.max(...eventData.participants.map(p => (Array.isArray(p.raw) ? p.raw.length : 0)) , 0);
-            const counts = new Array(maxCols).fill(0);
-
-            eventData.participants.forEach(p => {
-                const raw = Array.isArray(p.raw) ? p.raw : [];
-                for (let c = 0; c < maxCols; c++) {
-                    const v = String(raw[c] || '').trim();
-                    if (!v) continue;
-                    if (emailRegex.test(v)) continue; // skip emails
-                    if (nameRegex.test(v) && v.split(' ').length >= 2) counts[c]++;
-                }
-            });
-
-            let bestIdx = -1, bestCount = 0;
-            counts.forEach((cnt, idx) => {
-                if (cnt > bestCount) { bestCount = cnt; bestIdx = idx; }
-            });
-            if (bestCount > 0) inferredNameIdx = bestIdx;
-        }
-
-        // Compact view: show Name, Email, College (Team column removed)
-        const compactColumns = [
-            { label: 'Name', idx: nameIdx },
-            { label: 'Email', idx: emailIdx },
-            { label: 'College', idx: collegeIdx }
-        ];
-
-        headRow.innerHTML = '<th>#</th>';
-        if (this.detailsShowAll) {
-            headers.forEach((h, idx) => {
-                const th = document.createElement('th');
-                th.textContent = (h && String(h).trim().length > 0) ? h : `COL ${idx + 1}`;
-                headRow.appendChild(th);
-            });
-        } else {
-            compactColumns.forEach(col => {
-                const th = document.createElement('th');
-                th.textContent = col.label;
-                headRow.appendChild(th);
-            });
-        }
+        // Show Team Groups with Team Leader Name under each team
+        headRow.innerHTML = '<th>#</th><th>Team Name</th><th>Team Leader</th>';
 
         tbody.innerHTML = '';
-        eventData.participants.forEach((p, idx) => {
+        let rowNum = 1;
+        Object.values(teamGroups).forEach(group => {
             const tr = document.createElement('tr');
-            const raw = Array.isArray(p.raw) ? p.raw : [];
-            tr.innerHTML = `<td>${idx + 1}</td>`;
-            if (this.detailsShowAll) {
-                headers.forEach((_, colIdx) => {
-                    const td = document.createElement('td');
-                    const val = raw[colIdx];
-                    td.textContent = (val === undefined || val === null || String(val).trim() === '') ? '-' : String(val);
-                    tr.appendChild(td);
-                });
-            } else {
-                // Render compact columns: Name, Team, Email, College
-                // Name
-                const nameTd = document.createElement('td');
-                // Team leader name preference: check common leader properties first,
-                // then explicit leader column, then participant `name`, then raw name column
-                const leaderProps = [p.teamLeader, p.team_leader, p.leaderName, p.leader_name, p.captain, p.captainName, p.captain_name, p.contact_name];
-                const leaderFromProps = leaderProps.find(v => v && String(v).trim().length > 0);
-                // Prefer explicit leader column first for every team tab, then inferredNameIdx, then leader props, then p.name
-                const fromLeaderCol = (leaderNameIdx >= 0 && raw[leaderNameIdx] && String(raw[leaderNameIdx]).trim().length > 0) ? String(raw[leaderNameIdx]) : '';
-                const fromInferred = (inferredNameIdx >= 0 && raw[inferredNameIdx] && String(raw[inferredNameIdx]).trim().length > 0) ? String(raw[inferredNameIdx]) : '';
-                const displayName = fromLeaderCol || fromInferred || leaderFromProps || (p.name && String(p.name).trim().length > 0 ? p.name : (raw[nameIdx] || '-'));
-                nameTd.textContent = displayName;
-                tr.appendChild(nameTd);
+            const tdNum = document.createElement('td');
+            tdNum.textContent = rowNum++;
+            tr.appendChild(tdNum);
 
-                // Email
-                const emailTd = document.createElement('td');
-                // Team leader email preference: check common leader email properties, then explicit leader email column, then participant.email, then raw email column
-                const leaderEmailProps = [p.teamLeaderEmail, p.team_leader_email, p.leaderEmail, p.leader_email, p.captainEmail, p.captain_email, p.contact_email];
-                const leaderEmailFromProps = leaderEmailProps.find(v => v && String(v).trim().length > 0);
-                const displayEmail = leaderEmailFromProps
-                    || (leaderEmailIdx >= 0 ? (raw[leaderEmailIdx] || '') : '')
-                    || (p.email && String(p.email).trim().length > 0 ? p.email : '')
-                    || (raw[emailIdx] || '-');
-                emailTd.textContent = displayEmail;
-                tr.appendChild(emailTd);
+            const tdTeam = document.createElement('td');
+            tdTeam.innerHTML = `<strong>${group.team}</strong>`;
+            tr.appendChild(tdTeam);
 
-                // College
-                const collegeTd = document.createElement('td');
-                const displayCollege = (p.college && String(p.college).trim().length > 0) ? p.college : (raw[collegeIdx] || '-');
-                collegeTd.textContent = displayCollege;
-                tr.appendChild(collegeTd);
-            }
+            const tdLeader = document.createElement('td');
+            tdLeader.innerHTML = `<div>${group.leader}</div><div style="font-size:0.85em; color:#666;">${group.email || 'N/A'}</div>`;
+            tr.appendChild(tdLeader);
+
             tbody.appendChild(tr);
         });
 
