@@ -154,6 +154,12 @@ export async function getAllExcelData() {
                 // Build a header index map so we don't depend on column order.
                 // Many Google Form sheets are: Timestamp, Name, Email, ...
                 const header = (rows[0] || []).map(h => String(h || "").trim().toLowerCase());
+                // Debugging: log headers to diagnose missing team leader mapping
+                try {
+                    console.log(`[GS] Sheet: ${sheetName} headers:`, header);
+                } catch (err) {
+                    // ignore logging errors in production
+                }
                 const idxOf = (re) => header.findIndex(h => re.test(h));
 
                 const timestampIdx = idxOf(/timestamp|submitted/);
@@ -162,13 +168,28 @@ export async function getAllExcelData() {
                 const teamIdx = idxOf(/team|group/);
                 const collegeIdx = idxOf(/college|institution|school|university/);
                 const eventIdx = idxOf(/event/);
-                // Team leader detection - look for leader/captain/head/coordinator columns
-                let teamLeaderIdx = idxOf(/leader|captain|head|coordinator|contact/);
-                // Skip if it matched an email column
-                if (teamLeaderIdx >= 0 && header[teamLeaderIdx].includes('email')) {
-                    teamLeaderIdx = -1;
+                // Team leader detection: prefer explicit "name" columns first, then leader-like headers
+                let teamLeaderIdx = -1;
+                const leaderNameCandidates = [
+                    'team leader name',
+                    'leader name',
+                    'captain name',
+                    'participant name',
+                    'full name',
+                    'name'
+                ];
+                for (const cand of leaderNameCandidates) {
+                    const idx = header.findIndex(h => h.includes(cand) && !h.includes('email'));
+                    if (idx !== -1) { teamLeaderIdx = idx; break; }
                 }
-                const teamLeaderEmailIdx = idxOf(/email/);
+                if (teamLeaderIdx === -1) {
+                    teamLeaderIdx = header.findIndex(h => /(leader|captain|head|coordinator|contact)/.test(h) && !/email/.test(h));
+                }
+                const teamLeaderEmailIdx = header.findIndex(h => h.includes('team leader email') || /leader.*email|\bemail\b|mail/.test(h));
+                // Debugging: log detected indices
+                try {
+                    console.log(`[GS] ${sheetName} -> teamLeaderIdx=${teamLeaderIdx}, teamLeaderEmailIdx=${teamLeaderEmailIdx}`);
+                } catch (err) {}
 
                 // Process data from this sheet (skip header).
                 // Event display name comes from the sheet/tab name:
