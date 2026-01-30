@@ -262,40 +262,26 @@ class F1Dashboard {
 
     updateRecentTicker() {
         const ticker = document.getElementById('recentTicker');
-
-        // Only show the 10 most recent registrations
+        // Show only the 10 most recent event names for looping ticker
         const recent = this.data.slice(-10).reverse();
 
         ticker.innerHTML = '';
-
-        // detect leader columns for ticker as well
-        const headers = (this.headers && this.headers.length > 0) ? this.headers : [];
-        const leaderNameIdx = headers.findIndex(h => /team\s*leader|leader\s*name|captain|contact\s*name/i.test(String(h || '')));
-        const leaderEmailIdx = headers.findIndex(h => /leader.*email|team.*email|captain.*email|contact.*email|email.*leader/i.test(String(h || '')));
 
         recent.forEach(participant => {
             const item = document.createElement('div');
             item.className = 'ticker-item';
 
             const raw = Array.isArray(participant.raw) ? participant.raw : [];
-            const displayName = (participant.name && String(participant.name).trim().length > 0)
-                ? participant.name
-                : (leaderNameIdx >= 0 ? (raw[leaderNameIdx] || '-') : (raw[0] || '-'));
-            const displayTeam = participant.team || participant.event || (raw[2] || '-');
-            const displayEmail = (participant.email && String(participant.email).trim().length > 0)
-                ? participant.email
-                : (leaderEmailIdx >= 0 ? (raw[leaderEmailIdx] || '-') : (raw[1] || '-'));
+            const eventName = participant.event || raw[2] || raw[0] || '-';
 
             item.innerHTML = `
-                <span class="ticker-name">${displayName}</span>
-                <span class="ticker-team">${displayTeam}</span>
-                <span class="ticker-email">${displayEmail}</span>
+                <span class="ticker-event">${eventName}</span>
             `;
 
             ticker.appendChild(item);
         });
 
-        // Remove previous clone (if any) to avoid accumulating nodes
+        // Keep only one clone to enable smooth looping
         const existingClone = ticker.parentNode.querySelector('.ticker-clone');
         if (existingClone) existingClone.remove();
         const clone = ticker.cloneNode(true);
@@ -422,10 +408,9 @@ class F1Dashboard {
             if (found >= 0) paymentIdx = found;
         }
 
-        // Compact view: show Name, Team, Email, College (no timestamp column)
+        // Compact view: show Name, Email, College (Team column removed)
         const compactColumns = [
             { label: 'Name', idx: nameIdx },
-            { label: 'Team', idx: teamIdx },
             { label: 'Email', idx: emailIdx },
             { label: 'College', idx: collegeIdx }
         ];
@@ -467,12 +452,6 @@ class F1Dashboard {
                     : (leaderNameIdx >= 0 ? (raw[leaderNameIdx] || '-') : (raw[nameIdx] || '-'));
                 nameTd.textContent = displayName;
                 tr.appendChild(nameTd);
-
-                // Team
-                const teamTd = document.createElement('td');
-                const displayTeam = (p.team && String(p.team).trim().length > 0) ? p.team : (raw[teamIdx] || p.event || '-');
-                teamTd.textContent = displayTeam;
-                tr.appendChild(teamTd);
 
                 // Email
                 const emailTd = document.createElement('td');
