@@ -263,7 +263,8 @@ class F1Dashboard {
     updateRecentTicker() {
         const ticker = document.getElementById('recentTicker');
 
-        const recent = this.data.slice(-20).reverse();
+        // Only show the 10 most recent registrations
+        const recent = this.data.slice(-10).reverse();
 
         ticker.innerHTML = '';
 
@@ -271,18 +272,24 @@ class F1Dashboard {
             const item = document.createElement('div');
             item.className = 'ticker-item';
 
-            const timeAgo = this.getTimeAgo(participant.timestamp);
+            const displayName = participant.name || (Array.isArray(participant.raw) ? participant.raw[0] : '-') || '-';
+            const displayTeam = participant.team || participant.event || (Array.isArray(participant.raw) ? participant.raw[2] : '-') || '-';
+            const displayEmail = participant.email || (Array.isArray(participant.raw) ? participant.raw[1] : '-') || '-';
 
-            // Show event name only (no participant names)
             item.innerHTML = `
-                <span class="ticker-name">${participant.event}</span>
-                <span class="ticker-time">${timeAgo}</span>
+                <span class="ticker-name">${displayName}</span>
+                <span class="ticker-team">${displayTeam}</span>
+                <span class="ticker-email">${displayEmail}</span>
             `;
 
             ticker.appendChild(item);
         });
 
+        // Remove previous clone (if any) to avoid accumulating nodes
+        const existingClone = ticker.parentNode.querySelector('.ticker-clone');
+        if (existingClone) existingClone.remove();
         const clone = ticker.cloneNode(true);
+        clone.classList.add('ticker-clone');
         ticker.parentNode.appendChild(clone);
     }
 
@@ -386,9 +393,11 @@ class F1Dashboard {
         }
 
         const headers = (this.headers && this.headers.length > 0) ? this.headers : [];
-        const nameIdx = CONFIG?.COLUMNS?.NAME ?? 1;
-        const collegeIdx = CONFIG?.COLUMNS?.COLLEGE ?? 2;
-        const timestampIdx = CONFIG?.COLUMNS?.TIMESTAMP ?? 0;
+        const nameIdx = CONFIG?.COLUMNS?.NAME ?? 0;
+        const emailIdx = CONFIG?.COLUMNS?.EMAIL ?? 1;
+        const teamIdx = CONFIG?.COLUMNS?.TEAM ?? 2;
+        const collegeIdx = CONFIG?.COLUMNS?.COLLEGE ?? 3;
+        const timestampIdx = CONFIG?.COLUMNS?.TIMESTAMP ?? 5;
 
         let paymentIdx = null;
         if (typeof CONFIG?.PAYMENT_INDEX === 'number') {
@@ -399,11 +408,12 @@ class F1Dashboard {
             if (found >= 0) paymentIdx = found;
         }
 
+        // Compact view: show Name, Team, Email, College (no timestamp column)
         const compactColumns = [
             { label: 'Name', idx: nameIdx },
-            { label: 'College', idx: collegeIdx },
-            { label: 'Year', idx: 3 },
-            { label: 'Timestamp', idx: timestampIdx }
+            { label: 'Team', idx: teamIdx },
+            { label: 'Email', idx: emailIdx },
+            { label: 'College', idx: collegeIdx }
         ];
 
         headRow.innerHTML = '<th>#</th>';
@@ -434,16 +444,30 @@ class F1Dashboard {
                     tr.appendChild(td);
                 });
             } else {
-                compactColumns.forEach(col => {
-                    const td = document.createElement('td');
-                    if (col.idx === null) {
-                        td.textContent = '-';
-                    } else {
-                        const val = raw[col.idx];
-                        td.textContent = (val === undefined || val === null || String(val).trim() === '') ? '-' : String(val);
-                    }
-                    tr.appendChild(td);
-                });
+                // Render compact columns: Name, Team, Email, College
+                // Name
+                const nameTd = document.createElement('td');
+                const displayName = (p.name && String(p.name).trim().length > 0) ? p.name : (raw[nameIdx] || '-');
+                nameTd.textContent = displayName;
+                tr.appendChild(nameTd);
+
+                // Team
+                const teamTd = document.createElement('td');
+                const displayTeam = (p.team && String(p.team).trim().length > 0) ? p.team : (raw[teamIdx] || p.event || '-');
+                teamTd.textContent = displayTeam;
+                tr.appendChild(teamTd);
+
+                // Email
+                const emailTd = document.createElement('td');
+                const displayEmail = (p.email && String(p.email).trim().length > 0) ? p.email : (raw[emailIdx] || '-');
+                emailTd.textContent = displayEmail;
+                tr.appendChild(emailTd);
+
+                // College
+                const collegeTd = document.createElement('td');
+                const displayCollege = (p.college && String(p.college).trim().length > 0) ? p.college : (raw[collegeIdx] || '-');
+                collegeTd.textContent = displayCollege;
+                tr.appendChild(collegeTd);
             }
             tbody.appendChild(tr);
         });
