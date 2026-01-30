@@ -162,11 +162,9 @@ export async function getAllExcelData() {
                 const teamIdx = idxOf(/team|group/);
                 const collegeIdx = idxOf(/college|institution|school|university/);
                 const eventIdx = idxOf(/event/);
-                // Flexible team leader detection - matches various column names
-                const teamLeaderIdx = idxOf(/leader|captain|head|coordinator|contact/) >= 0 
-                    ? idxOf(/leader|captain|head|coordinator|contact/)
-                    : idxOf(/team/);  // fallback to team column if no leader found
-                const teamLeaderEmailIdx = idxOf(/leader.*email|email.*leader|captain.*email|contact.*email|team.*email/);
+                // Team leader detection - look for explicit team leader columns only
+                const teamLeaderIdx = idxOf(/^team\s+leader|^leader\s+name|^leader$|^captain$|^team\s+head/);
+                const teamLeaderEmailIdx = idxOf(/^team\s+leader\s+email|^leader\s+email|^leader\s+mail/);
 
                 // Process data from this sheet (skip header).
                 // Event display name comes from the sheet/tab name:
