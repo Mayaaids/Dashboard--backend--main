@@ -156,12 +156,12 @@ export async function getAllExcelData() {
                 const header = (rows[0] || []).map(h => String(h || "").trim().toLowerCase());
                 const idxOf = (re) => header.findIndex(h => re.test(h));
 
-                const timestampIdx = idxOf(/time|timestamp|submitted/);
-                const nameIdx = idxOf(/(^|\b)name(\b|$)/);
-                const emailIdx = idxOf(/mail/);
-                const teamIdx = idxOf(/team/);
-                const collegeIdx = idxOf(/college|institution|school/);
-                const eventIdx = idxOf(/event/); // if the tab contains an Event column, keep it as meta
+                const timestampIdx = idxOf(/^timestamp$|^submitted/);
+                const nameIdx = idxOf(/^name$|^full name|^participant name/);
+                const emailIdx = idxOf(/^email|^e-mail/);
+                const teamIdx = idxOf(/^team$/);
+                const collegeIdx = idxOf(/^college$|^institution$|^school$|^university$/);
+                const eventIdx = idxOf(/^event$/); // if the tab contains an Event column, keep it as meta
 
                 // Process data from this sheet (skip header).
                 // Event display name comes from the sheet/tab name:
@@ -189,7 +189,7 @@ export async function getAllExcelData() {
                         team || "N/A",
                         displayEventName,
                         college || "N/A",
-                        timestamp || new Date().toLocaleString()
+                        timestamp || ""
                     ];
 
                     return {
