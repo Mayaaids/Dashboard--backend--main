@@ -268,13 +268,23 @@ class F1Dashboard {
 
         ticker.innerHTML = '';
 
+        // detect leader columns for ticker as well
+        const headers = (this.headers && this.headers.length > 0) ? this.headers : [];
+        const leaderNameIdx = headers.findIndex(h => /team\s*leader|leader\s*name|captain|contact\s*name/i.test(String(h || '')));
+        const leaderEmailIdx = headers.findIndex(h => /leader.*email|team.*email|captain.*email|contact.*email|email.*leader/i.test(String(h || '')));
+
         recent.forEach(participant => {
             const item = document.createElement('div');
             item.className = 'ticker-item';
 
-            const displayName = participant.name || (Array.isArray(participant.raw) ? participant.raw[0] : '-') || '-';
-            const displayTeam = participant.team || participant.event || (Array.isArray(participant.raw) ? participant.raw[2] : '-') || '-';
-            const displayEmail = participant.email || (Array.isArray(participant.raw) ? participant.raw[1] : '-') || '-';
+            const raw = Array.isArray(participant.raw) ? participant.raw : [];
+            const displayName = (participant.name && String(participant.name).trim().length > 0)
+                ? participant.name
+                : (leaderNameIdx >= 0 ? (raw[leaderNameIdx] || '-') : (raw[0] || '-'));
+            const displayTeam = participant.team || participant.event || (raw[2] || '-');
+            const displayEmail = (participant.email && String(participant.email).trim().length > 0)
+                ? participant.email
+                : (leaderEmailIdx >= 0 ? (raw[leaderEmailIdx] || '-') : (raw[1] || '-'));
 
             item.innerHTML = `
                 <span class="ticker-name">${displayName}</span>
@@ -399,6 +409,10 @@ class F1Dashboard {
         const collegeIdx = CONFIG?.COLUMNS?.COLLEGE ?? 3;
         const timestampIdx = CONFIG?.COLUMNS?.TIMESTAMP ?? 5;
 
+        // Prefer explicit team-leader columns when present in headers
+        const leaderNameIdx = headers.findIndex(h => /team\s*leader|leader\s*name|captain|contact\s*name/i.test(String(h || '')));
+        const leaderEmailIdx = headers.findIndex(h => /leader.*email|team.*email|captain.*email|contact.*email|email.*leader/i.test(String(h || '')));
+
         let paymentIdx = null;
         if (typeof CONFIG?.PAYMENT_INDEX === 'number') {
             paymentIdx = CONFIG.PAYMENT_INDEX;
@@ -447,7 +461,10 @@ class F1Dashboard {
                 // Render compact columns: Name, Team, Email, College
                 // Name
                 const nameTd = document.createElement('td');
-                const displayName = (p.name && String(p.name).trim().length > 0) ? p.name : (raw[nameIdx] || '-');
+                // Team leader name preference: participant object -> explicit leader column -> raw name column
+                const displayName = (p.name && String(p.name).trim().length > 0)
+                    ? p.name
+                    : (leaderNameIdx >= 0 ? (raw[leaderNameIdx] || '-') : (raw[nameIdx] || '-'));
                 nameTd.textContent = displayName;
                 tr.appendChild(nameTd);
 
@@ -459,7 +476,10 @@ class F1Dashboard {
 
                 // Email
                 const emailTd = document.createElement('td');
-                const displayEmail = (p.email && String(p.email).trim().length > 0) ? p.email : (raw[emailIdx] || '-');
+                // Team leader email preference: participant.email -> explicit leader email column -> raw email column
+                const displayEmail = (p.email && String(p.email).trim().length > 0)
+                    ? p.email
+                    : (leaderEmailIdx >= 0 ? (raw[leaderEmailIdx] || '-') : (raw[emailIdx] || '-'));
                 emailTd.textContent = displayEmail;
                 tr.appendChild(emailTd);
 
