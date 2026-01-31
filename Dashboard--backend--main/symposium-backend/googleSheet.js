@@ -123,18 +123,18 @@ export async function getAllExcelData() {
         
         const allSheets = spreadsheetInfo.data.sheets || [];
         console.log("📊 Found", allSheets.length, "sheets in spreadsheet");
+        allSheets.forEach(s => console.log(`   - Sheet: "${s.properties.title}"`));
         
         let allData = [];
         let recordCount = 0;
         
-        // Read from each sheet (skip Sheet1 which is for new registrations)
+        // Read from each sheet (now includes Sheet1 if it has data)
         for (const sheet of allSheets) {
             const sheetName = sheet.properties.title;
             
-            // Skip Sheet1 (empty registration sheet)
-            if (sheetName === "Sheet1") {
-                console.log("⏭️  Skipping", sheetName, "(registration sheet)");
-                continue;
+            // Skip only completely empty sheets or system sheets
+            if (/^(Sheet|metadata|config)$/i.test(sheetName)) {
+                console.log("⏭️  Checking", sheetName, "for data...");
             }
             
             try {

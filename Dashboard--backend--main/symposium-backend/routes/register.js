@@ -155,6 +155,98 @@ router.get("/excel", async (req, res) => {
     }
 });
 
+// Analytics endpoint - total participants, events breakdown, participant details
+router.get("/analytics", async (req, res) => {
+    try {
+        console.log("🔍 Analytics endpoint called");
+        const excelData = await getAllExcelData();
+        console.log("📊 Analytics: Received", excelData ? excelData.length : 0, "records");
+
+        if (!excelData || excelData.length === 0) {
+            console.log("⚠️  No data from getAllExcelData, returning empty");
+            return res.json({
+                success: true,
+                totalParticipants: 0,
+                events: [],
+                eventDetails: {}
+            });
+        }
+
+        // Build event statistics
+        const eventStats = {};
+        const eventDetails = {};
+
+        console.log("🔄 Processing", excelData.length, "records");
+        excelData.forEach((participant, idx) => {
+            if (idx < 3) console.log(`   Sample ${idx}:`, participant.event, participant.name);
+            
+            const eventName = (participant.event && String(participant.event).trim().length > 0)
+                ? String(participant.event).trim()
+                : 'Unknown Event';
+
+            if (!eventStats[eventName]) {
+                eventStats[eventName] = 0;
+                eventDetails[eventName] = [];
+            }
+
+            eventStats[eventName]++;
+            
+            // Collect participant details for each event
+            eventDetails[eventName].push({
+                name: participant.name || 'N/A',
+                email: participant.email || 'N/A',
+                college: participant.college || 'N/A',
+                team: participant.team || 'N/A',
+                timestamp: participant.timestamp || '',
+                teamLeader: participant.teamLeader || participant.name || 'N/A',
+                teamLeaderEmail: participant.teamLeaderEmail || participant.email || 'N/A'
+            });
+        });
+
+        // Sort events by count (descending)
+        const sortedEvents = Object.entries(eventStats)
+            .map(([name, count]) => ({
+                name,
+                count,
+                participants: eventDetails[name] || []
+            }))
+            .sort((a, b) => b.count - a.count);
+
+        console.log("✅ Built", sortedEvents.length, "events, total:", excelData.length);
+
+        res.json({
+            success: true,
+            totalParticipants: excelData.length,
+            events: sortedEvents,
+            eventDetails: eventDetails
+        });
+
+    } catch (err) {
+        console.log("❌ Error in /analytics endpoint:", err.message);
+        res.status(500).json({
+            success: false,
+            error: err.message,
+            totalParticipants: 0,
+            events: [],
+            eventDetails: {}
+        });
+    }
+});
+
+// Debug endpoint - list all sheets and row counts
+router.get("/debug/sheets", async (req, res) => {
+    try {
+        const { getAllExcelData } = await import('../googleSheet.js');
+        const allData = await getAllExcelData();
+        res.json({
+            totalRecords: allData.length,
+            data: allData.slice(0, 5) // First 5 records as sample
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Delete a registration by generated id
 router.delete('/delete/:id', async (req, res) => {
     try {

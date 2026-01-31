@@ -67,45 +67,50 @@ class F1Dashboard {
         this.isFetching = true;
 
         try {
-            // Try to fetch from Google Sheets first
-            const excelEndpoint = `${CONFIG.BACKEND_URL}/api/register/excel`;
-            console.log('Fetching from:', excelEndpoint);
+            // Fetch analytics data (total, events, participants)
+            const analyticsEndpoint = `${CONFIG.BACKEND_URL}/api/register/analytics`;
+            console.log('Fetching analytics from:', analyticsEndpoint);
             
-            let response;
-            try {
-                response = await fetch(excelEndpoint);
-                console.log('Response status:', response.status);
-            } catch (fetchErr) {
-                console.error('Fetch error:', fetchErr);
-                response = null;
-            }
+            const response = await fetch(analyticsEndpoint);
+            console.log('Response status:', response.status);
 
-            let result = null;
-            
             if (response && response.ok) {
-                try {
-                    result = await response.json();
-                    console.log('Data received:', result.data ? `${result.data.length} records` : 'No data in response');
-                } catch (parseErr) {
-                    console.error('JSON parse error:', parseErr);
-                }
-            } else if (response) {
-                console.warn('Response not ok, status:', response.status);
-            }
+                const result = await response.json();
+                console.log('Analytics received:', {
+                    totalParticipants: result.totalParticipants,
+                    eventCount: result.events ? result.events.length : 0
+                });
 
-            // Handle Google Sheets data format
-            if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
-                console.log('Processing Google Sheets data...');
-                this.previousData = [...this.data];
-                this.data = result.data;
-                // Ensure headers are available (backend doesn't always send headers)
-                this.headers = result.headers && Array.isArray(result.headers) && result.headers.length > 0
-                    ? result.headers
-                    : (CONFIG.HEADERS || []);
-                this.processData();
-                this.updateConnectionStatus('connected');
+                if (result.success && result.events) {
+                    this.previousData = [...this.data];
+                    
+                    // Flatten events into individual participant records for compatibility
+                    this.data = [];
+                    result.events.forEach(event => {
+                        if (event.participants && Array.isArray(event.participants)) {
+                            event.participants.forEach(p => {
+                                this.data.push({
+                                    name: p.name || 'N/A',
+                                    email: p.email || 'N/A',
+                                    college: p.college || 'N/A',
+                                    team: p.team || 'N/A',
+                                    event: event.name,
+                                    timestamp: p.timestamp || new Date().toISOString(),
+                                    teamLeader: p.teamLeader || p.name || 'N/A',
+                                    teamLeaderEmail: p.teamLeaderEmail || p.email || 'N/A'
+                                });
+                            });
+                        }
+                    });
+
+                    this.analyticsData = result; // Store full analytics data
+                    this.processData();
+                    this.updateConnectionStatus('connected');
+                } else {
+                    console.warn('Invalid analytics response format');
+                }
             } else {
-                console.warn('No valid data received from backend; leaving existing data unchanged');
+                console.warn('Analytics fetch failed');
             }
         } catch (error) {
             console.error('Error in fetchData:', error);
@@ -209,7 +214,10 @@ class F1Dashboard {
     updateEventCards() {
         const leaderboard = document.getElementById('leaderboard');
         const totalParticipants = this.data.length;
-        const sortedEvents = Object.values(this.eventStats).sort((a, b) => b.count - a.count);
+        
+        // Sort events by participant count in DESCENDING order
+        const sortedEvents = Object.values(this.eventStats)
+            .sort((a, b) => b.count - a.count);
 
         // Use card container styling
         leaderboard.classList.add('team-card-container');
@@ -223,37 +231,28 @@ class F1Dashboard {
             const card = document.createElement('div');
             card.className = 'team-card';
 
-            // Ensure the card title shows the Event name (fallback to participant.event if needed)
-            const displayTitle = (event.name && String(event.name).trim().length > 0)
-                ? event.name
-                : (event.participants && event.participants[0] && event.participants[0].event) ? event.participants[0].event : 'Unknown Event';
-
-            const metaText = (event.participants && event.participants.length > 0)
-                ? (event.participants[0].event || event.participants[0].sheet || '')
-                : '';
-
-            // Normalize event name by removing common prefixes like "Event - ", "Workshop - "
-            const rawName = (event.name && String(event.name).trim().length > 0)
-                ? event.name
-                : (event.participants && event.participants[0] && event.participants[0].event) ? event.participants[0].event : 'Unknown Event';
-
+            // Normalize event name by removing common prefixes
+            const rawName = event.name || 'Unknown Event';
             const normalized = String(rawName)
                 .replace(/^(Event|Workshop|Category)\s*[-–:\s]+/i, '')
                 .replace(/^"|"$/g, '')
                 .trim();
 
-            const combinedTitle = `${normalized} ${event.count}`;
+            // Display: Event Name (Count)
+            const combinedTitle = `${normalized}`;
 
             card.innerHTML = `
                 <div class="team-card-top">
                     <div class="team-card-title">${combinedTitle}</div>
+                    <div class="team-card-count">${event.count}</div>
                 </div>
-                <div class="team-card-meta">${metaText}</div>
                 <div class="team-card-bar"><div class="team-card-bar-fill" style="width:${Math.max(2, percentage)}%"></div></div>
             `;
 
             leaderboard.appendChild(card);
 
+            // Make clickable to show event details
+            card.style.cursor = 'pointer';
             card.addEventListener('click', () => {
                 this.showEventDetails(event.name);
             });
@@ -262,7 +261,8 @@ class F1Dashboard {
 
     updateRecentTicker() {
         const ticker = document.getElementById('recentTicker');
-        // Show only the 10 most recent event names for looping ticker
+        
+        // Show only the TOP 10 MOST RECENT registrations for looping ticker
         const recent = this.data.slice(-10).reverse();
 
         ticker.innerHTML = '';
@@ -271,16 +271,19 @@ class F1Dashboard {
             const item = document.createElement('div');
             item.className = 'ticker-item';
 
-            const raw = Array.isArray(participant.raw) ? participant.raw : [];
-            // Prefer leader name in ticker only if a leader-name column exists
-            const headers = (this.headers && this.headers.length > 0) ? this.headers : [];
-            const leaderNameIdx = headers.findIndex(h => /team\s*leader|leader\s*name|captain|contact\s*name/i.test(String(h || '')));
-            const leaderName = (leaderNameIdx >= 0 && raw[leaderNameIdx]) ? String(raw[leaderNameIdx]) : '';
-            const eventName = participant.event || raw[2] || raw[0] || '-';
+            // Display format: "Event Name • Leader Name • College"
+            const eventName = participant.event || 'Unknown Event';
+            const leaderName = participant.teamLeader || participant.name || 'N/A';
+            const college = participant.college || 'N/A';
 
-            // For ticker we show event name only; but ensure leader names won't be needed here.
+            // Format: EVENT • LEADER • COLLEGE
             item.innerHTML = `
+                <span class="ticker-label">📊 </span>
                 <span class="ticker-event">${eventName}</span>
+                <span class="ticker-separator"> • </span>
+                <span class="ticker-leader">${leaderName}</span>
+                <span class="ticker-separator"> • </span>
+                <span class="ticker-college">${college}</span>
             `;
 
             ticker.appendChild(item);
@@ -386,58 +389,50 @@ class F1Dashboard {
         const eventData = this.eventStats[eventName];
         if (!eventData) return;
 
-        // Group participants by team to show team leader under team name
-        const teamGroups = {};
-        eventData.participants.forEach(p => {
-            const teamName = p.team || p.event || 'Unassigned';
-            if (!teamGroups[teamName]) {
-                teamGroups[teamName] = { team: teamName, leader: p.teamLeader || 'Not Assigned', email: p.teamLeaderEmail || '', members: [] };
-            }
-            teamGroups[teamName].members.push(p);
-        });
-
+        // Update modal title and subtitle
         if (titleEl) {
             titleEl.textContent = eventName.toUpperCase();
         }
         if (subtitleEl) {
-            const teamCount = Object.keys(teamGroups).length;
-            subtitleEl.textContent = `${teamCount} team${teamCount !== 1 ? 's' : ''} - ${eventData.count} participant${eventData.count !== 1 ? 's' : ''}`;
+            subtitleEl.textContent = `${eventData.count} participant${eventData.count !== 1 ? 's' : ''}`;
         }
 
-        const headers = (this.headers && this.headers.length > 0) ? this.headers : [];
-        const nameIdx = CONFIG?.COLUMNS?.NAME ?? 0;
-        const emailIdx = CONFIG?.COLUMNS?.EMAIL ?? 1;
-        const teamIdx = CONFIG?.COLUMNS?.TEAM ?? 2;
-        const collegeIdx = CONFIG?.COLUMNS?.COLLEGE ?? 3;
-        const timestampIdx = CONFIG?.COLUMNS?.TIMESTAMP ?? 5;
+        // Set table headers: #, Team Leader Name, Email, College
+        headRow.innerHTML = '<th>#</th><th>LEADER NAME</th><th>EMAIL</th><th>COLLEGE</th>';
 
-        // Simple display: Team Leader, Email, College
-        headRow.innerHTML = '<th>#</th><th>Team Leader</th><th>Email</th><th>College</th>';
-
+        // Populate table rows with participant details
         tbody.innerHTML = '';
         let rowNum = 1;
+        
         eventData.participants.forEach(p => {
             const tr = document.createElement('tr');
             
+            // Row number
             const tdNum = document.createElement('td');
             tdNum.textContent = rowNum++;
+            tdNum.style.fontWeight = 'bold';
             tr.appendChild(tdNum);
 
+            // Team Leader Name
             const tdLeader = document.createElement('td');
-            tdLeader.textContent = p.teamLeader || 'Not Assigned';
+            tdLeader.textContent = p.teamLeader || p.name || 'N/A';
             tr.appendChild(tdLeader);
 
+            // Email
             const tdEmail = document.createElement('td');
-            tdEmail.textContent = p.teamLeaderEmail || p.email || '-';
+            tdEmail.textContent = p.teamLeaderEmail || p.email || 'N/A';
+            tdEmail.style.fontSize = '0.9em';
             tr.appendChild(tdEmail);
 
+            // College
             const tdCollege = document.createElement('td');
-            tdCollege.textContent = p.college || '-';
+            tdCollege.textContent = p.college || 'N/A';
             tr.appendChild(tdCollege);
 
             tbody.appendChild(tr);
         });
 
+        // Open modal
         modal.classList.add('open');
     }
 
