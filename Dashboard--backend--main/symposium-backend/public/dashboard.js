@@ -162,6 +162,7 @@ class F1Dashboard {
                 newEventStats[eventName] = {
                     name: eventName,
                     count: 0,
+                    maxLimit: CONFIG.getMaxLimit(eventName),
                     participants: []
                 };
             }
@@ -213,7 +214,6 @@ class F1Dashboard {
 
     updateEventCards() {
         const leaderboard = document.getElementById('leaderboard');
-        const totalParticipants = this.data.length;
         
         // Sort events by participant count in DESCENDING order
         const sortedEvents = Object.values(this.eventStats)
@@ -224,8 +224,9 @@ class F1Dashboard {
         leaderboard.innerHTML = '';
 
         sortedEvents.forEach((event, index) => {
-            const percentage = totalParticipants > 0
-                ? ((event.count / totalParticipants) * 100)
+            // Calculate percentage based on maxLimit, not total participants
+            const percentage = event.maxLimit > 0
+                ? Math.min((event.count / event.maxLimit) * 100, 100)
                 : 0;
 
             const card = document.createElement('div');
@@ -238,13 +239,13 @@ class F1Dashboard {
                 .replace(/^"|"$/g, '')
                 .trim();
 
-            // Display: Event Name (Count)
-            const combinedTitle = `${normalized}`;
+            // Format: "count / maxLimit" (e.g., "198 / 300")
+            const countDisplay = `${event.count} / ${event.maxLimit}`;
 
             card.innerHTML = `
                 <div class="team-card-top">
-                    <div class="team-card-title">${combinedTitle}</div>
-                    <div class="team-card-count">${event.count}</div>
+                    <div class="team-card-title">${normalized}</div>
+                    <div class="team-card-count">${countDisplay}</div>
                 </div>
                 <div class="team-card-bar"><div class="team-card-bar-fill" style="width:${Math.max(2, percentage)}%"></div></div>
             `;

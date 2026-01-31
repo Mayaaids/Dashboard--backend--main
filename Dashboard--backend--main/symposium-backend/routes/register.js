@@ -4,17 +4,53 @@ import { addToExcel, getAllExcelData } from "../googleSheet.js";
 
 const router = express.Router();
 
-// In-memory mock data for demo
+// In-memory mock data for demo - with event names and scores
 let mockRegistrations = [
-    { team: "Team A", count: 12 },
-    { team: "Team B", count: 8 },
-    { team: "Team C", count: 15 },
-    { team: "Team D", count: 10 }
+    { name: "Alice Johnson", email: "alice@mit.edu", team: "Team A", event: "Blockchain", college: "MIT", score: 100, timestamp: new Date().toISOString() },
+    { name: "Bob Smith", email: "bob@stanford.edu", team: "Team A", event: "Blockchain", college: "Stanford", score: 100, timestamp: new Date().toISOString() },
+    { name: "Carol Davis", email: "carol@iit.ac.in", team: "Team B", event: "BYOG", college: "IIT Delhi", score: 100, timestamp: new Date().toISOString() },
+    { name: "David Wilson", email: "david@mit.edu", team: "Team B", event: "Mind Trace", college: "MIT", score: 100, timestamp: new Date().toISOString() },
+    { name: "Eve Martinez", email: "eve@stanford.edu", team: "Team C", event: "MCP&AI", college: "Stanford", score: 100, timestamp: new Date().toISOString() },
+    { name: "Frank Brown", email: "frank@berkeley.edu", team: "Team C", event: "Spiking Neural Networks", college: "UC Berkeley", score: 100, timestamp: new Date().toISOString() },
+    { name: "Grace Lee", email: "grace@mit.edu", team: "Team D", event: "Crime Trace", college: "MIT", score: 300, timestamp: new Date().toISOString() },
+    { name: "Henry Chen", email: "henry@stanford.edu", team: "Team D", event: "Cyber Hunt", college: "Stanford", score: 300, timestamp: new Date().toISOString() },
+    { name: "Ivy Patel", email: "ivy@iit.ac.in", team: "Team A", event: "Code Sprint", college: "IIT Bombay", score: 300, timestamp: new Date().toISOString() },
+    { name: "Jack Wilson", email: "jack@mit.edu", team: "Team B", event: "Innovation Challenge", college: "MIT", score: 300, timestamp: new Date().toISOString() }
 ];
 
 // Register user
 router.post("/", async (req, res) => {
     try {
+        // Define event scores
+        const eventScores = {
+            'Blockchain': 100,
+            'BYOG': 100,
+            'Mind Trace': 100,
+            'MCP': 100,
+            'MCP&AI': 100,
+            'Spiking Neural Networks': 100,
+            'spiking neural networks': 100
+        };
+
+        // Function to get score for event
+        const getEventScore = (eventName) => {
+            const lowerEventName = String(eventName).toLowerCase().trim();
+            
+            for (const [key] of Object.entries(eventScores)) {
+                if (lowerEventName === key.toLowerCase()) {
+                    return 100;
+                }
+            }
+            
+            if (lowerEventName.includes('blockchain')) return 100;
+            if (lowerEventName.includes('byog')) return 100;
+            if (lowerEventName.includes('mind trace')) return 100;
+            if (lowerEventName.includes('mcp')) return 100;
+            if (lowerEventName.includes('spiking neural')) return 100;
+            
+            return 300;
+        };
+
         const registrationData = {
             name: req.body.name || "Unknown",
             email: req.body.email || "unknown@example.com",
@@ -106,21 +142,8 @@ router.get("/excel", async (req, res) => {
         } else {
             // Fallback to mock data if Google Sheets is empty
             console.log("⚠️  Using mock data fallback");
-            const total = mockRegistrations.reduce((sum, team) => sum + team.count, 0);
-            const data = mockRegistrations.map((team, idx) => {
-                const name = `${team.team} Member`, email = 'user@example.com', college = 'Unknown', ts = new Date().toLocaleString();
-                return {
-                    id: idx + 1,
-                    name,
-                    email,
-                    team: team.team,
-                    event: team.team,
-                    college,
-                    timestamp: ts,
-                    count: team.count,
-                    raw: [name, email, team.team, team.team, college, ts]
-                };
-            });
+            const data = mockRegistrations;
+            const total = data.length;
 
             res.json({
                 success: true,
@@ -131,21 +154,8 @@ router.get("/excel", async (req, res) => {
         }
     } catch (err) {
         console.log("❌ Error in /excel endpoint:", err.message);
-        const total = mockRegistrations.reduce((sum, team) => sum + team.count, 0);
-        const data = mockRegistrations.map((team, idx) => {
-            const name = `${team.team} Member`, email = 'user@example.com', college = 'Unknown', ts = new Date().toLocaleString();
-            return {
-                id: idx + 1,
-                name,
-                email,
-                team: team.team,
-                event: team.team,
-                college,
-                timestamp: ts,
-                count: team.count,
-                raw: [name, email, team.team, team.team, college, ts]
-            };
-        });
+        const data = mockRegistrations;
+        const total = data.length;
         res.json({
             success: true,
             data: data,
@@ -159,18 +169,44 @@ router.get("/excel", async (req, res) => {
 router.get("/analytics", async (req, res) => {
     try {
         console.log("🔍 Analytics endpoint called");
-        const excelData = await getAllExcelData();
+        let excelData = await getAllExcelData();
         console.log("📊 Analytics: Received", excelData ? excelData.length : 0, "records");
 
+        // Use mock data if Google Sheets returns nothing
         if (!excelData || excelData.length === 0) {
-            console.log("⚠️  No data from getAllExcelData, returning empty");
-            return res.json({
-                success: true,
-                totalParticipants: 0,
-                events: [],
-                eventDetails: {}
-            });
+            console.log("⚠️  No Google Sheets data, using mock data for analytics");
+            excelData = mockRegistrations;
         }
+
+        // Define event scores
+        const eventScores = {
+            'Blockchain': 100,
+            'BYOG': 100,
+            'Mind Trace': 100,
+            'MCP': 100,
+            'MCP&AI': 100,
+            'Spiking Neural Networks': 100,
+            'spiking neural networks': 100
+        };
+
+        // Function to get score for event
+        const getEventScore = (eventName) => {
+            const lowerEventName = String(eventName).toLowerCase().trim();
+            
+            for (const [key, score] of Object.entries(eventScores)) {
+                if (lowerEventName === key.toLowerCase()) {
+                    return score;
+                }
+            }
+            
+            if (lowerEventName.includes('blockchain')) return 100;
+            if (lowerEventName.includes('byog')) return 100;
+            if (lowerEventName.includes('mind trace')) return 100;
+            if (lowerEventName.includes('mcp')) return 100;
+            if (lowerEventName.includes('spiking neural')) return 100;
+            
+            return 300;
+        };
 
         // Build event statistics
         const eventStats = {};
@@ -191,7 +227,6 @@ router.get("/analytics", async (req, res) => {
 
             eventStats[eventName]++;
             
-            // Collect participant details for each event
             eventDetails[eventName].push({
                 name: participant.name || 'N/A',
                 email: participant.email || 'N/A',
@@ -205,12 +240,33 @@ router.get("/analytics", async (req, res) => {
 
         // Sort events by count (descending)
         const sortedEvents = Object.entries(eventStats)
-            .map(([name, count]) => ({
-                name,
-                count,
-                participants: eventDetails[name] || []
-            }))
-            .sort((a, b) => b.count - a.count);
+            .map(([name, count]) => {
+                // Get multiplier for event (100 for special, 300 for others)
+                const multiplier = (
+                    name.toLowerCase().includes('blockchain') ||
+                    name.toLowerCase().includes('byog') ||
+                    name.toLowerCase().includes('mind trace') ||
+                    name.toLowerCase().includes('mcp') ||
+                    name.toLowerCase().includes('spiking neural')
+                ) ? 100 : 300;
+                
+                // Format score as "count/multiplier" (e.g., "43/100" or "198/300")
+                const score = `${count}/${multiplier}`;
+                
+                return {
+                    name,
+                    count,
+                    multiplier,
+                    score,  // e.g., "43/100" or "198/300"
+                    participants: eventDetails[name] || []
+                };
+            })
+            .sort((a, b) => {
+                // Parse scores for proper sorting
+                const scoreA = a.count / a.multiplier;
+                const scoreB = b.count / b.multiplier;
+                return scoreB - scoreA;
+            });
 
         console.log("✅ Built", sortedEvents.length, "events, total:", excelData.length);
 

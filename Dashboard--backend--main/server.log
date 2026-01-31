@@ -1,0 +1,13 @@
+
+> dashboard-project-root@1.0.0 start
+> node Dashboard--backend--main/symposium-backend/server.js
+
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+ΓÜá∩╕Å  GS_PRIVATE_KEY not set - Google Sheets integration disabled
+ΓÜá∩╕Å  MongoDB connection failed. Running in DEMO mode with mock data.
+   Error: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.
+   You can still test the API - it will return sample data.
+≡ƒÜÇ Server running on port 5000
+≡ƒôè Dashboard:  http://localhost:5000
+≡ƒô¥ Register:   http://localhost:5000/register
+≡ƒôê API:        http://localhost:5000/api/register (GET /excel, /stats | POST /)

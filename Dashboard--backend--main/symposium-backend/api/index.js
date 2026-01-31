@@ -7,9 +7,10 @@ import { fileURLToPath } from "url";
 import registerRoute from "../routes/register.js";
 import { initSheets } from "../googleSheet.js";
 
-dotenv.config();
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Load .env from symposium-backend directory (parent of api/)
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 const app = express();
 
 // Middleware
