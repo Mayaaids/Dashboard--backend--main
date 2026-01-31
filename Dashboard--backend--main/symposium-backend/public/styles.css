@@ -118,11 +118,6 @@ body {
     letter-spacing: 2px;
 }
 
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
 .header-brand {
     padding: 8px 12px;
     border: 1px solid rgba(225, 6, 0, 0.7);
@@ -232,117 +227,91 @@ body {
     }
 }
 
-/* Events Section (F1 Standings Style) */
+/* Events Section (F1 Pit Wall Style) */
 .events-section {
     margin-bottom: 40px;
 }
 
-.leaderboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 15px 20px;
-    border-bottom: 2px solid var(--f1-red);
-}
-
-.leaderboard-title {
-    font-size: 20px;
-    font-weight: 900;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--f1-red);
-}
-
-.leaderboard-subtitle {
-    font-size: 12px;
-    color: var(--f1-text-dim);
-    letter-spacing: 1px;
-}
-
-.leaderboard {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    /* Allow scrolling when many events exist */
-    max-height: 50vh;
-    overflow: auto;
-    padding-right: 8px; /* small padding to account for scrollbar */
-}
-
-.leaderboard-row {
+.events-grid {
     display: grid;
-    grid-template-columns: 60px 1fr 120px 100px;
-    gap: 15px;
-    align-items: center;
-    background: linear-gradient(90deg, rgba(225, 6, 0, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%);
-    border: 1px solid var(--f1-border);
-    border-radius: 6px;
-    padding: 15px 20px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.event-card {
+    background: linear-gradient(135deg, var(--f1-dark-gray) 0%, #222222 100%);
+    border: 2px solid var(--f1-border);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     cursor: pointer;
 }
 
-.leaderboard-row:hover {
+.event-card:hover {
     border-color: var(--f1-red);
-    background: linear-gradient(90deg, rgba(225, 6, 0, 0.2) 0%, rgba(0, 212, 255, 0.1) 100%);
-    box-shadow: 0 0 20px rgba(225, 6, 0, 0.3);
-    transform: translateX(5px);
+    box-shadow: 0 0 25px rgba(225, 6, 0, 0.4);
+    transform: translateY(-2px);
 }
 
-.leaderboard-position {
-    font-size: 24px;
-    font-weight: 900;
-    color: var(--f1-neon-blue);
-    text-align: center;
-    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+.event-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--f1-red);
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-.leaderboard-position.top-3 {
-    color: var(--f1-neon-green);
-    text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+.event-card.active::before {
+    opacity: 1;
 }
 
-.leaderboard-name {
+.event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.event-name {
     font-size: 16px;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--f1-white);
-    word-break: break-word;
+    flex: 1;
 }
 
-.leaderboard-name:hover {
-    color: var(--f1-neon-blue);
-}
-
-.leaderboard-bar {
-    display: flex;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-    overflow: hidden;
-    height: 30px;
-}
-
-.leaderboard-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--f1-red) 0%, var(--f1-orange) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 10px;
-    font-weight: 700;
-    color: var(--f1-white);
-    font-size: 12px;
-    transition: width 0.5s ease;
-}
-
-.leaderboard-count {
-    font-size: 18px;
+.event-count {
+    font-size: 36px;
     font-weight: 900;
     color: var(--f1-neon-blue);
-    text-align: right;
+    text-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
+    font-family: 'Arial Black', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.event-count.updating {
+    transform: scale(1.15);
+    color: var(--f1-neon-green);
+}
+
+.event-stats {
+    margin-top: 15px;
+}
+
+.event-percentage {
+    font-size: 14px;
+    color: var(--f1-text-dim);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
 }
 
 .percentage-value {
@@ -557,54 +526,6 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Team Cards (used in leaderboard container) */
-.team-card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    padding: 8px 0;
-}
-.team-card {
-    background: linear-gradient(180deg, rgba(26,26,26,0.95), rgba(18,18,18,0.95));
-    border: 1px solid rgba(255,255,255,0.04);
-    padding: 14px;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
-    cursor: pointer;
-}
-.team-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    border-color: rgba(225,6,0,0.25);
-}
-.team-card .team-card-top{
-    display:flex;align-items:center;gap:10px;
-}
-.team-card .team-card-title{
-    font-weight:800;font-size:15px;text-transform:uppercase;color:var(--f1-white);
-}
-.team-card .team-card-count{
-    margin-left:auto;font-weight:900;font-size:18px;color:var(--f1-neon-green);
-}
-.team-card .team-card-bar{height:8px;background:rgba(255,255,255,0.04);border-radius:6px;overflow:hidden;margin-top:8px}
-.team-card .team-card-bar-fill{height:100%;background:linear-gradient(90deg,var(--f1-neon-green),var(--f1-neon-blue));}
-
-/* Registration modal styles */
-.registration-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index:1600 }
-.registration-modal.open { display:flex }
-.registration-backdrop { position:absolute; inset:0; background: rgba(0,0,0,0.7) }
-.registration-panel { position:relative; background: #0f0f0f; border:2px solid var(--f1-red); padding:18px; border-radius:10px; width:360px; z-index:1 }
-.registration-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px }
-.registration-body label { display:block; margin-bottom:8px; font-size:13px }
-.registration-body input, .registration-body select { width:100%; padding:8px; margin-top:4px; background:#111; border:1px solid #333; color:var(--f1-white); border-radius:6px }
-.registration-actions{ display:flex; gap:8px; margin-top:12px }
-.registration-actions button{ padding:8px 12px; border-radius:6px; cursor:pointer }
-.registration-msg{ margin-top:8px; color:var(--f1-neon-green); font-size:13px }
-.registration-close{ background:transparent; border:none; color:var(--f1-white); font-size:20px; cursor:pointer }
-
 /* Event Details Modal */
 .event-details-modal {
     position: fixed;
@@ -753,102 +674,158 @@ body {
 .event-details-table tbody tr:hover {
     background: rgba(225, 6, 0, 0.15);
 }
+/* ========================================= */
+/* ✅ EVENT STANDINGS SECTION               */
+/* ========================================= */
 
-/* Registration form */
-.register-section {
-    max-width: 520px;
-    margin: 0 auto;
-    padding: 20px;
+.standings-section {
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 1;
 }
-.register-panel {
-    background: var(--f1-dark-gray);
-    border: 2px solid var(--f1-red);
-    border-radius: 10px;
-    padding: 24px;
-    box-shadow: 0 0 20px rgba(225, 6, 0, 0.25);
-}
-.register-title {
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    margin-bottom: 6px;
-}
-.register-subtitle {
-    font-size: 13px;
-    color: var(--f1-text-dim);
+
+.standings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
-}
-.register-form label {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 14px;
-    margin-bottom: 6px;
-    color: var(--f1-text-dim);
-}
-.register-form input {
-    width: 100%;
-    padding: 10px 12px;
-    background: #0a0a0a;
-    border: 1px solid var(--f1-border);
-    border-radius: 6px;
-    color: var(--f1-white);
-    font-size: 14px;
-}
-.register-form input:focus {
-    outline: none;
-    border-color: var(--f1-red);
-    box-shadow: 0 0 8px rgba(225, 6, 0, 0.2);
-}
-.register-btn {
-    margin-top: 20px;
-    padding: 12px 24px;
-    background: var(--f1-red);
-    border: none;
-    border-radius: 6px;
-    color: white;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: background 0.2s, box-shadow 0.2s;
-}
-.register-btn:hover:not(:disabled) {
-    background: var(--f1-bright-red);
-    box-shadow: 0 0 16px rgba(225, 6, 0, 0.4);
-}
-.register-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-.register-message {
-    margin-top: 16px;
-    font-size: 14px;
-    padding: 10px 12px;
-    border-radius: 6px;
-}
-.register-message.success {
-    background: rgba(0, 255, 136, 0.12);
-    border: 1px solid var(--f1-neon-green);
-    color: var(--f1-neon-green);
-}
-.register-message.error {
-    background: rgba(225, 6, 0, 0.15);
-    border: 1px solid var(--f1-red);
-    color: #ff6b6b;
-}
-.nav-link {
-    color: var(--f1-neon-blue);
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 1px;
-}
-.nav-link:hover {
-    text-decoration: underline;
-    color: var(--f1-neon-green);
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--f1-red);
 }
 
+.standings-title {
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--f1-white);
+    text-shadow: 0 0 10px rgba(225, 6, 0, 0.3);
+}
+
+.standings-subtitle {
+    font-size: 12px;
+    color: var(--f1-text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+#leaderboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 22px;
+    padding: 0;
+}
+
+/* ✅ EVENT CARD TILE */
+.team-card {
+    background: rgba(20, 20, 20, 0.85);
+    border: 2px solid var(--f1-red);
+    border-radius: 12px;
+    padding: 24px;
+    cursor: pointer;
+    box-shadow: 0 0 25px rgba(225, 6, 0, 0.35),
+                inset 0 0 15px rgba(225, 6, 0, 0.05);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.team-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(225, 6, 0, 0.02) 2px,
+        rgba(225, 6, 0, 0.02) 4px
+    );
+    pointer-events: none;
+}
+
+.team-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--f1-bright-red);
+    box-shadow: 0 0 40px rgba(225, 6, 0, 0.65),
+                0 0 80px rgba(0, 255, 136, 0.2),
+                inset 0 0 20px rgba(225, 6, 0, 0.1);
+}
+
+.team-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.team-card-title {
+    font-size: 16px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--f1-white);
+    line-height: 1.3;
+    max-width: 70%;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+.team-card-count {
+    font-size: 32px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--f1-neon-green) 0%, #00cc66 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 14px rgba(0, 255, 136, 0.45);
+    white-space: nowrap;
+    font-family: 'Arial Black', sans-serif;
+}
+
+.team-card-bar {
+    margin-top: 18px;
+    height: 10px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.team-card-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--f1-red) 0%, var(--f1-neon-green) 100%);
+    border-radius: 6px;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.2);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.team-card-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@media (max-width: 768px) {
+    #leaderboard {
+        grid-template-columns: 1fr;
+    }
+    
+    .standings-title {
+        font-size: 18px;
+    }
+}

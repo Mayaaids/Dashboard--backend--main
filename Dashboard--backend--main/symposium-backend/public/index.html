@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +8,6 @@
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
-
 <body>
     <div class="dashboard-container">
         <!-- Header Section -->
@@ -17,9 +15,7 @@
             <div class="header-content">
                 <div class="event-title">LIVE REGISTRATION CONTROL</div>
                 <div class="timestamp" id="timestamp">--:--:--</div>
-                <div class="header-right">
-                    <span class="header-brand" aria-label="TALOS">TALOS 5.0</span>
-                </div>
+                <div class="header-brand" aria-label="TALOS">TALOS</div>
             </div>
         </header>
 
@@ -31,14 +27,21 @@
             <div class="counter-pulse"></div>
         </section>
 
-        <!-- Event Leaderboard Section (F1 Standings Style) -->
+        <!-- Event-Wise Registration Cards (F1 Pit Wall Style) -->
         <section class="events-section">
-            <div class="leaderboard-header">
-                <span class="leaderboard-title">EVENT STANDINGS</span>
-                <span class="leaderboard-subtitle">Click event name for details</span>
+            <div class="events-grid" id="eventsGrid">
+                <!-- Event cards will be dynamically generated here -->
             </div>
-            <div class="leaderboard" id="leaderboard">
-                <!-- Event leaderboard will be dynamically generated here -->
+        </section>
+
+        <!-- EVENT STANDINGS Section -->
+        <section class="standings-section">
+            <div class="standings-header">
+                <div class="standings-title">EVENT STANDINGS</div>
+                <div class="standings-subtitle">Click event name for details</div>
+            </div>
+            <div id="leaderboard">
+                <!-- Event standings cards will be dynamically generated here -->
             </div>
         </section>
 
@@ -108,31 +111,4 @@
     <script src="config.js"></script>
     <script src="dashboard.js"></script>
 </body>
-
 </html>
-
-<!-- Registration Modal -->
-<div class="registration-modal" id="registrationModal">
-    <div class="registration-backdrop" id="registrationBackdrop"></div>
-    <div class="registration-panel">
-        <div class="registration-header">
-            <h3>Quick Registration</h3>
-            <button id="registrationClose" class="registration-close">×</button>
-        </div>
-        <div class="registration-body">
-            <label>Name <input type="text" id="regName" /></label>
-            <label>College <input type="text" id="regCollege" /></label>
-            <label>Event
-                <select id="regEvent">
-                    <option value="">-- Select Event --</option>
-                </select>
-            </label>
-            <label>Payment <input type="text" id="regPayment" placeholder="txn id / amount" /></label>
-            <div class="registration-actions">
-                <button id="registrationSubmit">Submit</button>
-                <button id="registrationCancel">Cancel</button>
-            </div>
-            <div id="registrationMsg" class="registration-msg"></div>
-        </div>
-    </div>
-</div>

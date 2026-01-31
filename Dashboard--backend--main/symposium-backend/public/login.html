@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TALOS 5.0 - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #2a0a0a 0%, #3e1a1a 50%, #2b0d0d 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #ffb3b3;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Subtle animated red grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(0deg, transparent 24%, rgba(255, 24, 24, 0.05) 25%, rgba(255, 24, 24, 0.05) 26%, transparent 27%, transparent 74%, rgba(255, 24, 24, 0.05) 75%, rgba(255, 24, 24, 0.05) 76%, transparent 77%, transparent),
+                linear-gradient(90deg, transparent 24%, rgba(255, 24, 24, 0.05) 25%, rgba(255, 24, 24, 0.05) 26%, transparent 27%, transparent 74%, rgba(255, 24, 24, 0.05) 75%, rgba(255, 24, 24, 0.05) 76%, transparent 77%, transparent);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+            animation: scroll 20s linear infinite;
+        }
+
+        @keyframes scroll {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: rgba(40, 10, 10, 0.92);
+            border: 2px solid #ff4d4d;
+            border-radius: 6px;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(255, 80, 80, 0.25), inset 0 0 20px rgba(255, 24, 24, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 24, 24, 0.03) 10px, rgba(255, 24, 24, 0.03) 20px);
+            animation: shimmer 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .login-header { position: relative; z-index: 2; text-align: center; margin-bottom: 24px; }
+
+        .login-title {
+            font-size: 34px;
+            font-weight: 800;
+            color: #ffb3b3;
+            text-shadow: 0 0 12px rgba(255, 24, 24, 0.45);
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%,49%,100% { text-shadow: 0 0 12px rgba(255,24,24,0.45), 0 0 20px rgba(255,24,24,0.25); }
+            50%,99% { text-shadow: 0 0 20px rgba(255,24,24,0.75), 0 0 40px rgba(255,24,24,0.35); }
+        }
+
+        .login-subtitle { font-size: 12px; color: rgba(255, 180, 180, 0.85); letter-spacing: 1px; margin-top: 8px; }
+
+        .form-group { position: relative; z-index: 2; margin-bottom: 18px; }
+
+        .form-label { display: block; font-size: 12px; color: #ffb3b3; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 700; }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(60, 10, 10, 0.7);
+            border: 1px solid #ff6b6b;
+            color: #ffdede;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.25s ease;
+            box-shadow: inset 0 0 6px rgba(255, 24, 24, 0.06);
+        }
+
+        .form-input:focus { border-color: #ff6b6b; background: rgba(80, 10, 10, 0.85); box-shadow: 0 0 12px rgba(255, 24, 24, 0.28), inset 0 0 6px rgba(255, 24, 24, 0.12); }
+
+        .form-input::placeholder { color: rgba(255, 180, 180, 0.6); }
+
+        .login-button {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 2px solid #ff6b6b;
+            color: #ffdede;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.6px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 0 0 rgba(255, 24, 24, 0.35);
+            margin-top: 10px;
+        }
+
+        .login-button:hover { background: rgba(255, 24, 24, 0.08); box-shadow: 0 0 18px rgba(255, 24, 24, 0.45), inset 0 0 18px rgba(255, 24, 24, 0.06); text-shadow: 0 0 8px rgba(255, 24, 24, 0.9); }
+
+        .login-button:active { transform: scale(0.98); box-shadow: 0 0 28px rgba(255, 24, 24, 0.6), inset 0 0 20px rgba(255, 24, 24, 0.12); }
+
+        .login-button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        .error-message { position: relative; z-index: 2; background: rgba(255, 0, 0, 0.08); border: 1px solid #ff4d4d; color: #ffb3b3; padding: 12px; border-radius: 4px; margin-bottom: 16px; font-size: 13px; display: none; text-align: center; }
+
+        .error-message.show { display: block; animation: slideIn 0.28s ease; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .loading-spinner { position: relative; z-index: 2; display: none; text-align: center; margin-top: 12px; font-size: 12px; color: rgba(255, 180, 180, 0.85); }
+
+        .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255, 24, 24, 0.25); border-top: 2px solid #ff6b6b; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; vertical-align: middle; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-spinner.show { display: block; }
+
+        .version-info { position: relative; z-index: 2; text-align: center; margin-top: 26px; font-size: 11px; color: rgba(255, 180, 180, 0.55); letter-spacing: 1px; }
+
+        .glitch { animation: glitch 0.3s ease; }
+
+        @keyframes glitch { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <div class="login-title">TALOS 5.0</div>
+                <div class="login-subtitle">LIVE REGISTRATION SYSTEM</div>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        class="form-input"
+                        placeholder="Enter username"
+                        required
+                        autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="form-input"
+                        placeholder="Enter password"
+                        required>
+                </div>
+
+                <button type="submit" class="login-button" id="loginBtn">
+                    ACCESS GRANTED
+                </button>
+
+                <div class="loading-spinner" id="loadingSpinner">
+                    <span class="spinner"></span>AUTHENTICATING...
+                </div>
+            </form>
+
+            <div class="version-info">
+                v5.0 SECURE LOGIN | STATUS: ONLINE
+            </div>
+        </div>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+
+</html>

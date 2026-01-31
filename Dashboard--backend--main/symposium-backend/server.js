@@ -13,9 +13,23 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '.env') });
 const app = express();
 
+// Login credentials
+const VALID_USERNAME = 'talos';
+const VALID_PASSWORD = 'talos5';
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Authentication middleware
+function requireAuth(req, res, next) {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token && token === 'TALOS_SESSION_TOKEN_12345') {
+        next();
+    } else {
+        res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+}
 
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -49,6 +63,29 @@ mongoConnectWithTimeout().then(connected => {
 // Initialize Google Sheets on startup
 initSheets().catch(err => {
     console.log("⚠️  Google Sheets initialization deferred to first request");
+});
+
+// Login endpoint
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+
+    if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+        res.json({
+            success: true,
+            message: 'Login successful',
+            token: 'TALOS_SESSION_TOKEN_12345'
+        });
+    } else {
+        res.status(401).json({
+            success: false,
+            message: 'Invalid username or password'
+        });
+    }
+});
+
+// Login page
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 app.use("/api/register", registerRoute);
